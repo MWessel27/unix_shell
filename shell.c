@@ -1,15 +1,60 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 int executeCmd(char *args){
   //this is where we will double check that the command is not empty
   // or if we need to exit the terminal
   if(strcmp(args,"quit") == 0){
     return 0;
-  } else {
-    return 1;
   }
+
+  int pid;
+  int status;
+
+  pid = fork();
+
+  char *cmd = args;
+  char *argv[3];
+  argv[0] = args;
+  argv[1] = NULL;
+  //argv[2] = NULL;
+
+  if(pid == 0) {
+    if(execvp(cmd, argv) == -1){
+      printf("Not a valid command!\n");
+      return 1;
+    }
+  } else {
+    do {
+    waitpid(pid, &status, 0);
+    } while (!WIFEXITED(status) && !WIFSIGNALED(status));
+  }
+
+  // pid_t pid;
+  // int status;
+  //
+  // pid = fork();
+  // if (pid == 0) {
+  //   // Child process
+  //   if (execvp(args[0], args) == -1) {
+  //     perror("lsh");
+  //   }
+  //   exit(EXIT_FAILURE);
+  // } else if (pid < 0) {
+  //   // Error forking
+  //   perror("lsh");
+  // } else {
+  //   // Parent process
+  //   do {
+  //     waitpid(pid, &status, WUNTRACED);
+  //   } while (!WIFEXITED(status) && !WIFSIGNALED(status));
+  // }
+
+  return 1;
 }
 
 char *readPrompt(){
