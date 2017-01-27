@@ -16,7 +16,7 @@ int executeCmd(char *args){
   int status;
 
   pid = fork();
-
+  
   char *cmd = args;
   char *argv[3];
   argv[0] = args;
@@ -35,6 +35,24 @@ int executeCmd(char *args){
   }
 
   return 1;
+}
+
+void executeBatch(char *args) {
+  FILE *fp;
+  char str[60];
+
+  /* opening file for reading */
+  fp = fopen(args , "r");
+  if(fp == NULL)
+  {
+     perror("Error opening file");
+     //return(-1);
+  }
+  if( fgets (str, 60, fp)!=NULL )
+  {
+     puts(str);
+  }
+  fclose(fp);
 }
 
 char *readPrompt(){
@@ -91,10 +109,13 @@ void prompt()
 }
 
 
-int main()
+int main(int argc, char *argv[])
 {
-  // call function to begin the prompt
-  prompt();
-
+  if(argc > 1) {
+    executeBatch(argv[1]);
+  } else {
+    // call function to begin the prompt
+    prompt();
+  }
   return EXIT_SUCCESS;
 }
