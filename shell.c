@@ -2,6 +2,16 @@
 #include <stdio.h>
 #include <string.h>
 
+int executeCmd(char *args){
+  //this is where we will double check that the command is not empty
+  // or if we need to exit the terminal
+  if(strcmp(args,"quit") == 0){
+    return 0;
+  } else {
+    return 1;
+  }
+}
+
 char *readPrompt(){
   //since the input could be over 512 char, we need to allocate
   // 512 command length once. If it is more than 512, we will allocate more
@@ -50,9 +60,8 @@ void prompt()
     printf("prompt> ");
     //next read the command from the prompt
     cmd = readPrompt();
-    printf("%s\n",cmd);
     //execute the command and return whether or not we are still running
-    //running = executeCmd(cmd);
+    running = executeCmd(cmd);
   } while (running);
 }
 
