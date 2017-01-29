@@ -5,36 +5,63 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
-int executeCmd(char *args){
+int executeCmd(char **args){
   //this is where we will double check that the command is not empty
   // or if we need to exit the terminal
-  if(strcmp(args,"quit") == 0){
+  if(args[0]==NULL){
+    return 1;
+  }
+  if(strcmp(args[0],"quit") == 0){
     return 0;
   }
 
+  //declare pid int and status int
   int pid;
   int status;
 
   pid = fork();
-  
-  char *cmd = args;
-  char *argv[3];
-  argv[0] = args;
-  argv[1] = NULL;
-  //argv[2] = NULL;
 
   if(pid == 0) {
-    if(execvp(cmd, argv) == -1){
+    if(execvp(args[0], args) == -1){
+      //if the argument is not valid, let the user know
       printf("Not a valid command!\n");
       return 1;
     }
   } else {
     do {
+    //wait for the pid to return
     waitpid(pid, &status, 0);
     } while (!WIFEXITED(status) && !WIFSIGNALED(status));
   }
 
   return 1;
+}
+
+#define TOKEN_DELIMETERS "\n\t "
+char **getArgs(char *cmd)
+{
+  //location for the array we will construct of arguments
+  int location = 0;
+  //start with a size that will act like a buffer
+  int argSize = 64;
+  //initialize/declare token and token delimeters of a size
+  char *token;
+  char **token_delims = malloc(argSize);
+
+  token = strtok(cmd, TOKEN_DELIMETERS);
+  while (token != NULL) {
+    token_delims[location] = token;
+    location++;
+
+    if (location >= argSize) {
+      argSize += argSize;
+      token_delims = realloc(token_delims, argSize);
+    }
+
+    token = strtok(NULL, TOKEN_DELIMETERS);
+  }
+  token_delims[location] = NULL;
+  return token_delims;
 }
 
 void executeBatch(char *args) {
@@ -72,7 +99,7 @@ char *readPrompt(){
 
     //since the char as an int could be an EOF int, or it could be a new line
     // check for it here
-    if (charLocation == ';' || charLocation == '\n' || charLocation == EOF) {
+    if (charLocation == '\n' || charLocation == EOF) {
       //to avoid a null pointer, add a null character
       cmd[size] = '\0';
       return cmd;
@@ -97,14 +124,17 @@ void prompt()
 {
   int running=1;
   char *cmd;
+  char **cmdArgs;
 
   do {
     //first print out the prompt
     printf("prompt> ");
     //next read the command from the prompt
     cmd = readPrompt();
+    //get the arguments from the command
+    cmdArgs = getArgs(cmd);
     //execute the command and return whether or not we are still running
-    running = executeCmd(cmd);
+    running = executeCmd(cmdArgs);
   } while (running);
 }
 
