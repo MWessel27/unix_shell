@@ -64,22 +64,28 @@ char **getArgs(char *cmd)
   return token_delims;
 }
 
-void executeBatch(char *args) {
+int executeBatch(char *args) {
   FILE *fp;
   char str[60];
+  char **cmdArgs;
 
   /* opening file for reading */
   fp = fopen(args , "r");
   if(fp == NULL)
   {
      perror("Error opening file");
-     //return(-1);
+     return EXIT_FAILURE;
   }
-  if( fgets (str, 60, fp)!=NULL )
+  while( fgets (str, 60, fp)!=NULL )
   {
-     puts(str);
+     printf("prompt>%s", str);
+     //get the arguments from the command
+     cmdArgs = getArgs(str);
+     //execute the command and return whether or not we are still running
+     executeCmd(cmdArgs);
   }
   fclose(fp);
+  return EXIT_SUCCESS;
 }
 
 char *readPrompt(){
@@ -99,7 +105,7 @@ char *readPrompt(){
 
     //since the char as an int could be an EOF int, or it could be a new line
     // check for it here
-    if (charLocation == '\n' || charLocation == EOF) {
+    if (charLocation == '\n' || charLocation == EOF || charLocation == ';') {
       //to avoid a null pointer, add a null character
       cmd[size] = '\0';
       return cmd;
