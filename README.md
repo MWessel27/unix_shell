@@ -2,9 +2,12 @@
 
 # Description
 Creating a Unix Shell program similar to Terminal. Basic functionality includes
-the ability to run any shell command as well as a series of commands and arguments.
+the ability to run any shell command as well as a series of commands and arguments
+delimited by a semicolon or in a specified batch file.
 
-Examples:
+Find this project on GitHub: https://github.com/MWessel27/unix_shell
+
+# Examples
 
 1. Single commands
 
@@ -35,5 +38,8 @@ gcc -std=c99 -Wall -Wextra -Werror -o tinysh shell.c
 Exit the program by typing 'quit' or hitting Ctrl-D on the keyboard
 
 # Author
-Created by Mikal Wessel for class COP4610.
-FSU ID: mdw15d
+Created by:
+
+- Mikal Wessel for class COP4610.
+
+- FSU ID: mdw15d
