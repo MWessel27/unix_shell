@@ -1,3 +1,2 @@
-ls -la
-pwd
+ls -la;pwd
 quit

@@ -5,6 +5,14 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
+/*
+Name: executeCmd
+Description: Execute a command on a forked process and wait for the result
+Parameters:
+  - args : command name and arguments to pass to the command
+Returns: A status of whether or not we are done executing the command in the
+          background process
+*/
 int executeCmd(char **args){
   //this is where we will double check that the command is not empty
   // or if we need to exit the terminal
@@ -37,6 +45,14 @@ int executeCmd(char **args){
   return 1;
 }
 
+/*
+Name: getArgs
+Description: Gets the arguments from a specified CLI
+Parameters:
+  - cmd : A CLI call to execute along with parameters
+Returns: The formatted arguments with the command line function to pair them with
+*/
+//define delimeters we will use for new line, tabs, and spaces
 #define TOKEN_DELIMETERS "\n\t "
 char **getArgs(char *cmd)
 {
@@ -46,48 +62,34 @@ char **getArgs(char *cmd)
   int argSize = 64;
   //initialize/declare token and token delimeters of a size
   char *token;
+  //allocate memory for the token delimeters
   char **token_delims = malloc(argSize);
 
+  //call strtok with the cmd and delimeters to get our tokens
   token = strtok(cmd, TOKEN_DELIMETERS);
   while (token != NULL) {
+    //add each token
     token_delims[location] = token;
     location++;
-
+    //if we go over the memory, allocate more
     if (location >= argSize) {
       argSize += argSize;
       token_delims = realloc(token_delims, argSize);
     }
-
+    //go until we hit null
     token = strtok(NULL, TOKEN_DELIMETERS);
   }
+  //end the delimeters with null
   token_delims[location] = NULL;
   return token_delims;
 }
 
-int executeBatch(char *args) {
-  FILE *fp;
-  char str[60];
-  char **cmdArgs;
-
-  /* opening file for reading */
-  fp = fopen(args , "r");
-  if(fp == NULL)
-  {
-     perror("Error opening file");
-     return EXIT_FAILURE;
-  }
-  while( fgets (str, 60, fp)!=NULL )
-  {
-     printf("prompt>%s", str);
-     //get the arguments from the command
-     cmdArgs = getArgs(str);
-     //execute the command and return whether or not we are still running
-     executeCmd(cmdArgs);
-  }
-  fclose(fp);
-  return EXIT_SUCCESS;
-}
-
+/*
+Name: readPrompt
+Description: Waits for user to enter commands and then reads them from stdin
+Parameters: None
+Returns: The command that the user wants to run with the arguments they want to pass
+*/
 char *readPrompt(){
   //since the input could be over 512 char, we need to allocate
   // 512 command length once. If it is more than 512, we will allocate more
@@ -124,6 +126,81 @@ char *readPrompt(){
       cmd = realloc(cmd, cmdLength);
     }
   }
+}
+
+/*
+Name: strdup
+Description:
+Parameters:
+Returns:
+*/
+char *strdup(const char *str)
+{
+  char *cpy = NULL;
+  if (str)
+  {
+  cpy = malloc(strlen(str)+1);
+  if (cpy)
+  strcpy(cpy, str);
+  }
+  return cpy;
+}
+
+char **split(char *str, char delimeter)
+{
+    char **result = 0;
+    char delim[2];
+    delim[0] = delimeter;
+    delim[1] = 0;
+
+    result = malloc(512);
+
+    if (result)
+    {
+        size_t idx  = 0;
+        char* token = strtok(str, delim);
+
+        while (token)
+        {
+            *(result + idx++) = strdup(token);
+            token = strtok(0, delim);
+        }
+        *(result + idx) = 0;
+    }
+
+    return result;
+}
+
+int executeBatch(char *args) {
+  FILE *fp;
+  char str[60];
+  char **cmdArgs;
+  char **splitCmd;
+  /* opening file for reading */
+  fp = fopen(args , "r");
+  if(fp == NULL)
+  {
+     perror("Error opening file");
+     return EXIT_FAILURE;
+  }
+  while( fgets (str, 60, fp)!=NULL )
+  {
+      //read the file in one line at a time
+      printf("prompt>%s", str);
+      //lets split the command by semi colon
+      splitCmd = split(str, ';');
+
+      for (int i = 0; *(splitCmd + i); i++)
+      {
+          //get the arguments from the command
+          cmdArgs = getArgs(*(splitCmd + i));
+          //execute the command and return whether or not we are still running
+          executeCmd(cmdArgs);
+      }
+      printf("\n");
+  }
+  fclose(fp);
+  return EXIT_SUCCESS;
 }
 
 void prompt()
