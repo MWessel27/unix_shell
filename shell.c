@@ -27,6 +27,7 @@ int executeCmd(char **args){
   int pid;
   int status;
 
+  //fork a separate process
   pid = fork();
 
   if(pid == 0) {
@@ -130,9 +131,10 @@ char *readPrompt(){
 
 /*
 Name: strdup
-Description:
+Description: Do a string duplication of memory location for the passed in string
 Parameters:
-Returns:
+  - str : String to be duplicated
+Returns: Dupilicated string memory location
 */
 char *strdup(const char *str)
 {
@@ -146,40 +148,59 @@ char *strdup(const char *str)
   return cpy;
 }
 
+/*
+Name: split
+Description: Split a string by a delimeter
+Parameters:
+  - str : String to be split
+  - delimeter : Delimeter to split string
+Returns: The split string
+*/
 char **split(char *str, char delimeter)
 {
     char **result = 0;
+    //create a delimeter object
     char delim[2];
     delim[0] = delimeter;
     delim[1] = 0;
 
+    //allocate memory for the result
     result = malloc(512);
 
-    if (result)
-    {
-        size_t idx  = 0;
-        char* token = strtok(str, delim);
+    //create a size holder and token object
+    size_t idx  = 0;
+    char* token = strtok(str, delim);
 
-        while (token)
-        {
-            *(result + idx++) = strdup(token);
-            token = strtok(0, delim);
-        }
-        *(result + idx) = 0;
+    while (token)
+    {
+        //while we have a token, duplicate the split string and point the result
+        // to the memory location
+        *(result + idx++) = strdup(token);
+        token = strtok(0, delim);
     }
+    *(result + idx) = 0;
 
     return result;
 }
 
+/*
+Name: executeBatch
+Description: Execute a batch file that is passed in
+Parameters:
+  - args : stdin
+Returns: An integer state to let us know to continue running or to stop
+*/
 int executeBatch(char *args) {
+  //first lets initialize variables to read from a file
   FILE *fp;
   char str[60];
   char **cmdArgs;
   char **splitCmd;
-  /* opening file for reading */
+  //open the file for read operations
   fp = fopen(args , "r");
   if(fp == NULL)
   {
+     //fail if we can't open the file
      perror("Error opening file");
      return EXIT_FAILURE;
   }
@@ -190,6 +211,7 @@ int executeBatch(char *args) {
       //lets split the command by semi colon
       splitCmd = split(str, ';');
 
+      //get the parsed string object from the split function
       for (int i = 0; *(splitCmd + i); i++)
       {
           //get the arguments from the command
@@ -203,6 +225,12 @@ int executeBatch(char *args) {
   return EXIT_SUCCESS;
 }
 
+/*
+Name: prompt
+Description: Continuously prompt the user to enter commands into stdin
+Parameters: None
+Returns: Void
+*/
 void prompt()
 {
   int running=1;
@@ -221,10 +249,14 @@ void prompt()
   } while (running);
 }
 
-
+/*
+Name: main
+Description: Main function
+*/
 int main(int argc, char *argv[])
 {
   if(argc > 1) {
+    // call to execute a batch file of commands
     executeBatch(argv[1]);
   } else {
     // call function to begin the prompt
